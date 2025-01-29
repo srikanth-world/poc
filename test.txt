@@ -1,53 +1,66 @@
 using System;
 using System.Collections.Generic;
 using System.Web.Http;
-using BAML.GMOT.CHILD.Reporting.Backend.Managers.GTS.Report;
-using BAML.GMOT.CHILD.Reporting.Entities;
 
-namespace BAML.GMOT.CHILD.Reporting.Web.ApiControllers
+public class TemplateController : ApiController
 {
-    [RoutePrefix("api/templates")]
-    public class EASTSTemplateApproveApiController : ApiController
+    [HttpGet]
+    public IHttpActionResult GetTemplateInfos(SearchModel<EASTSTemplateCriteria, ApproveItem> model = null)
     {
-        [HttpGet]
-        [Route("")]
-        public IHttpActionResult GetTemplates()
+        List<CorpFxConfig> templateInfos = ReportManager.GetTemplateInfos(CurrentUser, "Checker");
+        
+        if (model?.Criteria == null)
         {
-            var templates = ReportManager.GetTemplateInfos(CurrentUser, "Checker");
-            return Ok(templates);
+            model.Criteria = new EASTSTemplateCriteria();
         }
-
-        [HttpPost]
-        [Route("approve")]
-        public IHttpActionResult ApproveTemplate([FromBody] ApproveRequest request)
+        
+        if (model.Criteria.UploadFrom == DateTime.MinValue)
         {
-            ReportManager.Approve(request.Filename, CurrentUser, request.Approved);
-            return Ok();
+            model.Criteria.UploadFrom = ReportDate.AddDays(-1);
         }
-
-        [HttpGet]
-        [Route("details")]
-        public IHttpActionResult GetDetails(string filename)
+        
+        if (model.Criteria.UploadTo == DateTime.MinValue)
         {
-            var details = ReportManager.GetTemplateDataDetails(new SearchModel<EASTSTemplateCriteria, EASTSTemplate> { Criteria = new EASTSTemplateCriteria { TemplateName = filename } }, CurrentUser);
-            return Ok(details);
+            model.Criteria.UploadTo = ReportDate;
         }
-
-        [HttpGet]
-        [Route("export")]
-        public IHttpActionResult ExportData(string filename)
-        {
-            var model = new SearchModel<EASTSTemplateCriteria, ApproveItem> { Criteria = new EASTSTemplateCriteria { TemplateName = filename } };
-            var result = ReportManager.GetExportData(model);
-            var columnsDic = ReportManager.GetColumnsDic(model.Criteria.TemplateName);
-            var data = Exporter.BreakDownExport(result, columnsDic);
-            return Ok(new { FileName = FileDownloadHelper.DownloadFile(data, filename.Replace(',', '_') + DateTime.Now.ToString("yyyyMMddHmmssfff") + ".xls") });
-        }
+        
+        // Fetch data
+        ReportManager.GetTemplateDetails(model, CurrentUser);
+        
+        return Ok(new { model, templateInfos, reportDate = ReportDate });
     }
 
-    public class ApproveRequest
+    [HttpPost]
+    public IHttpActionResult Approve(SearchModel<EASTSTemplateCriteria, ApproveItem> model, bool approved)
     {
-        public string Filename { get; set; }
-        public bool Approved { get; set; }
+        // You can handle approval logic here, then return the updated model
+        return Ok(GetTemplateInfos(model));
+    }
+
+    [HttpPost]
+    public IHttpActionResult GetDetails(SearchModel<EASTSTemplateCriteria, EASTSTemplate> model = null)
+    {
+        List<CorpFxConfig> templateInfos = ReportManager.GetTemplateInfos(CurrentUser);
+        ViewBag.TemplateFields = ReportManager.GetSheetFields(model.Criteria.TemplateName);
+        ViewBag.ReportDate = ReportDate;
+        ViewBag.TemplateInfos = templateInfos;
+        model.PagingEnabled = true;
+        
+        ReportManager.GetTemplateDataDetails(model);
+        return Ok(model);
+    }
+
+    [HttpPost]
+    public IHttpActionResult Export(SearchModel<EASTSTemplateCriteria, ApproveItem> model = null)
+    {
+        var result = ReportManager.GetExportData(model);
+        var columnsDic = ReportManager.GetColumnsDic(model.Criteria.TemplateName);
+        var data = Exporter.BreakDownExport(result, columnsDic);
+        
+        // Trigger file download, but you need to return a response with the file data
+        var fileName = model.Criteria.TemplateName.Replace(" ", "_") + DateTime.Now.ToString("yyyyMMdd-HHmmssfff") + ".xls";
+        DownLoadFileHelper.DownLoadFile(data, fileName);
+        
+        return Ok(new { message = "Exported successfully", fileName });
     }
 }
