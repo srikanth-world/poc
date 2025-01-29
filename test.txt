@@ -1,0 +1,53 @@
+using System;
+using System.Collections.Generic;
+using System.Web.Http;
+using BAML.GMOT.CHILD.Reporting.Backend.Managers.GTS.Report;
+using BAML.GMOT.CHILD.Reporting.Entities;
+
+namespace BAML.GMOT.CHILD.Reporting.Web.ApiControllers
+{
+    [RoutePrefix("api/templates")]
+    public class EASTSTemplateApproveApiController : ApiController
+    {
+        [HttpGet]
+        [Route("")]
+        public IHttpActionResult GetTemplates()
+        {
+            var templates = ReportManager.GetTemplateInfos(CurrentUser, "Checker");
+            return Ok(templates);
+        }
+
+        [HttpPost]
+        [Route("approve")]
+        public IHttpActionResult ApproveTemplate([FromBody] ApproveRequest request)
+        {
+            ReportManager.Approve(request.Filename, CurrentUser, request.Approved);
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("details")]
+        public IHttpActionResult GetDetails(string filename)
+        {
+            var details = ReportManager.GetTemplateDataDetails(new SearchModel<EASTSTemplateCriteria, EASTSTemplate> { Criteria = new EASTSTemplateCriteria { TemplateName = filename } }, CurrentUser);
+            return Ok(details);
+        }
+
+        [HttpGet]
+        [Route("export")]
+        public IHttpActionResult ExportData(string filename)
+        {
+            var model = new SearchModel<EASTSTemplateCriteria, ApproveItem> { Criteria = new EASTSTemplateCriteria { TemplateName = filename } };
+            var result = ReportManager.GetExportData(model);
+            var columnsDic = ReportManager.GetColumnsDic(model.Criteria.TemplateName);
+            var data = Exporter.BreakDownExport(result, columnsDic);
+            return Ok(new { FileName = FileDownloadHelper.DownloadFile(data, filename.Replace(',', '_') + DateTime.Now.ToString("yyyyMMddHmmssfff") + ".xls") });
+        }
+    }
+
+    public class ApproveRequest
+    {
+        public string Filename { get; set; }
+        public bool Approved { get; set; }
+    }
+}
