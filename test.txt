@@ -1,40 +1,24 @@
 using System.Web.Http;
-using System.Web.Mvc;
 
-namespace BAML.GMOT.CHILD.Reporting_Web.Areas.GTS
+public static class WebApiConfig
 {
-    public class GTSAreaRegistration : AreaRegistration
+    public static void Register(HttpConfiguration config)
     {
-        public override string AreaName
-        {
-            get { return "GTS"; }
-        }
+        // Enable attribute routing
+        config.MapHttpAttributeRoutes();
 
-        public override void RegisterArea(AreaRegistrationContext context)
-        {
-            // MVC Routing
-            context.MapRoute(
-                "GTS_default",
-                "GTS/{controller}/{action}/{reportId}",
-                new { action = "Index", reportId = UrlParameter.Optional },
-                new[] { "BAML.GMOT.CHILD.Reporting_Web.Areas.GTS.Controllers" }
-            );
+        // Define a default API route
+        config.Routes.MapHttpRoute(
+            name: "DefaultApi",
+            routeTemplate: "api/{controller}/{id}",
+            defaults: new { id = RouteParameter.Optional }
+        );
 
-            // API Routing
-            RegisterApiRoutes(context);
-        }
-
-        private void RegisterApiRoutes(AreaRegistrationContext context)
-        {
-            // Get the HttpConfiguration for the GTS area
-            var config = GlobalConfiguration.Configuration;
-
-            // Define API routes
-            config.Routes.MapHttpRoute(
-                name: "GTS_Api",
-                routeTemplate: "GTS/api/{controller}/{action}/{id}",
-                defaults: new { id = RouteParameter.Optional }
-            );
-        }
+        // Define a custom route for the GTS area
+        config.Routes.MapHttpRoute(
+            name: "GTS_Api",
+            routeTemplate: "GTS/api/{controller}/{action}/{id}",
+            defaults: new { id = RouteParameter.Optional }
+        );
     }
 }
