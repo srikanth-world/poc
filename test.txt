@@ -1,66 +1,40 @@
-using System;
-using System.Collections.Generic;
 using System.Web.Http;
+using System.Web.Mvc;
 
-public class TemplateController : ApiController
+namespace BAML.GMOT.CHILD.Reporting_Web.Areas.GTS
 {
-    [HttpGet]
-    public IHttpActionResult GetTemplateInfos(SearchModel<EASTSTemplateCriteria, ApproveItem> model = null)
+    public class GTSAreaRegistration : AreaRegistration
     {
-        List<CorpFxConfig> templateInfos = ReportManager.GetTemplateInfos(CurrentUser, "Checker");
-        
-        if (model?.Criteria == null)
+        public override string AreaName
         {
-            model.Criteria = new EASTSTemplateCriteria();
+            get { return "GTS"; }
         }
-        
-        if (model.Criteria.UploadFrom == DateTime.MinValue)
+
+        public override void RegisterArea(AreaRegistrationContext context)
         {
-            model.Criteria.UploadFrom = ReportDate.AddDays(-1);
+            // MVC Routing
+            context.MapRoute(
+                "GTS_default",
+                "GTS/{controller}/{action}/{reportId}",
+                new { action = "Index", reportId = UrlParameter.Optional },
+                new[] { "BAML.GMOT.CHILD.Reporting_Web.Areas.GTS.Controllers" }
+            );
+
+            // API Routing
+            RegisterApiRoutes(context);
         }
-        
-        if (model.Criteria.UploadTo == DateTime.MinValue)
+
+        private void RegisterApiRoutes(AreaRegistrationContext context)
         {
-            model.Criteria.UploadTo = ReportDate;
+            // Get the HttpConfiguration for the GTS area
+            var config = GlobalConfiguration.Configuration;
+
+            // Define API routes
+            config.Routes.MapHttpRoute(
+                name: "GTS_Api",
+                routeTemplate: "GTS/api/{controller}/{action}/{id}",
+                defaults: new { id = RouteParameter.Optional }
+            );
         }
-        
-        // Fetch data
-        ReportManager.GetTemplateDetails(model, CurrentUser);
-        
-        return Ok(new { model, templateInfos, reportDate = ReportDate });
-    }
-
-    [HttpPost]
-    public IHttpActionResult Approve(SearchModel<EASTSTemplateCriteria, ApproveItem> model, bool approved)
-    {
-        // You can handle approval logic here, then return the updated model
-        return Ok(GetTemplateInfos(model));
-    }
-
-    [HttpPost]
-    public IHttpActionResult GetDetails(SearchModel<EASTSTemplateCriteria, EASTSTemplate> model = null)
-    {
-        List<CorpFxConfig> templateInfos = ReportManager.GetTemplateInfos(CurrentUser);
-        ViewBag.TemplateFields = ReportManager.GetSheetFields(model.Criteria.TemplateName);
-        ViewBag.ReportDate = ReportDate;
-        ViewBag.TemplateInfos = templateInfos;
-        model.PagingEnabled = true;
-        
-        ReportManager.GetTemplateDataDetails(model);
-        return Ok(model);
-    }
-
-    [HttpPost]
-    public IHttpActionResult Export(SearchModel<EASTSTemplateCriteria, ApproveItem> model = null)
-    {
-        var result = ReportManager.GetExportData(model);
-        var columnsDic = ReportManager.GetColumnsDic(model.Criteria.TemplateName);
-        var data = Exporter.BreakDownExport(result, columnsDic);
-        
-        // Trigger file download, but you need to return a response with the file data
-        var fileName = model.Criteria.TemplateName.Replace(" ", "_") + DateTime.Now.ToString("yyyyMMdd-HHmmssfff") + ".xls";
-        DownLoadFileHelper.DownLoadFile(data, fileName);
-        
-        return Ok(new { message = "Exported successfully", fileName });
     }
 }
