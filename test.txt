@@ -1,24 +1,33 @@
 using System.Web.Http;
 
-public static class WebApiConfig
+namespace BAML.GMOT.CHILD.Reporting_Web.Areas.GTS.Controllers
 {
-    public static void Register(HttpConfiguration config)
+    [RoutePrefix("api/GTS/Template")] // Define the route prefix
+    public class TemplateController : ApiController
     {
-        // Enable attribute routing
-        config.MapHttpAttributeRoutes();
+        // GET: api/GTS/Template
+        [HttpGet]
+        [Route("")]
+        public IHttpActionResult Get()
+        {
+            var model = new TemplateModel(); // Replace with your model
+            return Ok(model); // Return JSON response
+        }
 
-        // Define a default API route
-        config.Routes.MapHttpRoute(
-            name: "DefaultApi",
-            routeTemplate: "api/{controller}/{id}",
-            defaults: new { id = RouteParameter.Optional }
-        );
+        // POST: api/GTS/Template
+        [HttpPost]
+        [Route("")]
+        public IHttpActionResult Post([FromBody] TemplateModel model)
+        {
+            if (model == null)
+            {
+                return BadRequest("Model is required");
+            }
 
-        // Define a custom route for the GTS area
-        config.Routes.MapHttpRoute(
-            name: "GTS_Api",
-            routeTemplate: "GTS/api/{controller}/{action}/{id}",
-            defaults: new { id = RouteParameter.Optional }
-        );
+            // Fetch or process data
+            ReportManager.GetTemplateDetails(model, CurrentUser);
+
+            return Ok(model); // Return JSON response
+        }
     }
 }
