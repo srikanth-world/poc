@@ -1,3 +1,4 @@
+using System;
 using System.Web.Http;
 
 namespace BAML.GMOT.CHILD.Reporting_Web.Areas.GTS.Controllers
@@ -8,26 +9,83 @@ namespace BAML.GMOT.CHILD.Reporting_Web.Areas.GTS.Controllers
         // GET: api/GTS/Template
         [HttpGet]
         [Route("")]
-        public IHttpActionResult Get()
+        public IHttpActionResult Index([FromUri] SearchModel<EASTSTemplateCriteria, ApproveItem> model = null)
         {
-            var model = new TemplateModel(); // Replace with your model
-            return Ok(model); // Return JSON response
+            // Initialize model if null
+            if (model == null)
+            {
+                model = new SearchModel<EASTSTemplateCriteria, ApproveItem>();
+            }
+
+            // Initialize Criteria if null
+            if (model.Criteria == null)
+            {
+                model.Criteria = new EASTSTemplateCriteria();
+            }
+
+            // Set default values for UploadFrom and UploadTo
+            if (model.Criteria.UploadFrom == DateTime.MinValue)
+            {
+                model.Criteria.UploadFrom = ReportDate.AddDays(-1);
+            }
+
+            if (model.Criteria.UploadTo == DateTime.MinValue)
+            {
+                model.Criteria.UploadTo = ReportDate;
+            }
+
+            // Fetch template infos
+            List<CorpFxConfig> templateInfos = ReportManager.GetTemplateInfos(CurrentUser, "Checker");
+
+            // Return JSON response
+            var response = new
+            {
+                Model = model,
+                TemplateInfos = templateInfos,
+                ReportDate = ReportDate
+            };
+
+            return Ok(response);
         }
 
         // POST: api/GTS/Template
         [HttpPost]
         [Route("")]
-        public IHttpActionResult Post([FromBody] TemplateModel model)
+        public IHttpActionResult Index([FromBody] SearchModel<EASTSTemplateCriteria, ApproveItem> model)
         {
             if (model == null)
             {
                 return BadRequest("Model is required");
             }
 
-            // Fetch or process data
+            // Initialize Criteria if null
+            if (model.Criteria == null)
+            {
+                model.Criteria = new EASTSTemplateCriteria();
+            }
+
+            // Set default values for UploadFrom and UploadTo
+            if (model.Criteria.UploadFrom == DateTime.MinValue)
+            {
+                model.Criteria.UploadFrom = ReportDate.AddDays(-1);
+            }
+
+            if (model.Criteria.UploadTo == DateTime.MinValue)
+            {
+                model.Criteria.UploadTo = ReportDate;
+            }
+
+            // Fetch template details
             ReportManager.GetTemplateDetails(model, CurrentUser);
 
-            return Ok(model); // Return JSON response
+            // Return JSON response
+            var response = new
+            {
+                Model = model,
+                ReportDate = ReportDate
+            };
+
+            return Ok(response);
         }
     }
 }
