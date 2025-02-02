@@ -1,10 +1,12 @@
-protected void Application_BeginRequest()
+protected void Application_BeginRequest(object sender, EventArgs e)
 {
-    string origin = Request.Headers["Origin"];
-    if (!string.IsNullOrEmpty(origin))
+    if (HttpContext.Current.Request.HttpMethod == "OPTIONS")
     {
-        Response.Headers["Access-Control-Allow-Origin"] = origin;
-        Response.Headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS";
-        Response.Headers["Access-Control-Allow-Headers"] = "Content-Type";
+        HttpContext.Current.Response.AddHeader("Access-Control-Allow-Origin", "http://localhost:4200");
+        HttpContext.Current.Response.AddHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        HttpContext.Current.Response.AddHeader("Access-Control-Allow-Headers", "Content-Type");
+        HttpContext.Current.Response.AddHeader("Access-Control-Max-Age", "3600"); // Cache preflight response for 1 hour
+        HttpContext.Current.Response.StatusCode = 200;
+        HttpContext.Current.Response.Flush();
     }
 }
