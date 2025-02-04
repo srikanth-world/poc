@@ -1,12 +1,38 @@
-protected void Application_BeginRequest(object sender, EventArgs e)
-{
-    if (HttpContext.Current.Request.HttpMethod == "OPTIONS")
-    {
-        HttpContext.Current.Response.AddHeader("Access-Control-Allow-Origin", "http://localhost:4200");
-        HttpContext.Current.Response.AddHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        HttpContext.Current.Response.AddHeader("Access-Control-Allow-Headers", "Content-Type");
-        HttpContext.Current.Response.AddHeader("Access-Control-Max-Age", "3600"); // Cache preflight response for 1 hour
-        HttpContext.Current.Response.StatusCode = 200;
-        HttpContext.Current.Response.Flush();
-    }
+import { Component, OnInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent implements OnInit {
+  criteria = {
+    uploadFrom: '',
+    uploadTo: ''
+  };
+
+  constructor(private http: HttpClient) {}
+
+  ngOnInit() {
+    this.fetchData();
+  }
+
+  fetchData() {
+    // Replace 'YOUR_API_ENDPOINT' with your actual API endpoint
+    this.http.get('YOUR_API_ENDPOINT').subscribe((response: any) => {
+      // Transform the dates to 'MM-DD-YYYY' format
+      this.criteria.uploadFrom = this.formatDate(response.Criteria.UploadFrom);
+      this.criteria.uploadTo = this.formatDate(response.Criteria.UploadTo);
+    });
+  }
+
+  // Helper function to format dates as 'MM-DD-YYYY'
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    const month = ('0' + (date.getMonth() + 1)).slice(-2); // Add leading zero
+    const day = ('0' + date.getDate()).slice(-2); // Add leading zero
+    const year = date.getFullYear();
+    return `${month}-${day}-${year}`;
+  }
 }
