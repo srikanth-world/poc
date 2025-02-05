@@ -1,38 +1,69 @@
-import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
 
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
-export class AppComponent implements OnInit {
-  criteria = {
-    uploadFrom: '',
-    uploadTo: ''
-  };
+<div class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-12">
+      <form (ngSubmit)="onSearch()" class="mb-4">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label for="uploadFrom" class="form-label">Upload From</label>
+            <input type="date" class="form-control" [(ngModel)]="criteria.uploadFrom" name="uploadFrom" id="uploadFrom">
+          </div>
+          <div class="col-md-3">
+            <label for="uploadTo" class="form-label">Upload To</label>
+            <input type="date" class="form-control" [(ngModel)]="criteria.uploadTo" name="uploadTo" id="uploadTo">
+          </div>
+          <div class="col-md-3">
+            <label for="templateName" class="form-label">Template Name</label>
+            <select class="form-select" [(ngModel)]="criteria.templateName" name="templateName" id="templateName">
+              <option *ngFor="let item of dropdownList" [value]="item.value">{{ item.text }}</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="approveStatus" class="form-label">Approve Status</label>
+            <select class="form-select" [(ngModel)]="criteria.approveStatus" name="approveStatus" id="approveStatus">
+              <option *ngFor="let status of approveStatus" [value]="status.value">{{ status.text }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-md-12">
+            <button type="submit" class="btn btn-primary">Search</button>
+          </div>
+        </div>
+      </form>
 
-  constructor(private http: HttpClient) {}
-
-  ngOnInit() {
-    this.fetchData();
-  }
-
-  fetchData() {
-    // Replace 'YOUR_API_ENDPOINT' with your actual API endpoint
-    this.http.get('YOUR_API_ENDPOINT').subscribe((response: any) => {
-      // Transform the dates to 'MM-DD-YYYY' format
-      this.criteria.uploadFrom = this.formatDate(response.Criteria.UploadFrom);
-      this.criteria.uploadTo = this.formatDate(response.Criteria.UploadTo);
-    });
-  }
-
-  // Helper function to format dates as 'MM-DD-YYYY'
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    const month = ('0' + (date.getMonth() + 1)).slice(-2); // Add leading zero
-    const day = ('0' + date.getDate()).slice(-2); // Add leading zero
-    const year = date.getFullYear();
-    return `${month}-${day}-${year}`;
-  }
-}
+      <div *ngIf="results" class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>Approve Status</th>
+              <th>Template Name</th>
+              <th>File Name</th>
+              <th>Uploader</th>
+              <th>Upload Time</th>
+              <th>Recorded Count</th>
+              <th>Operation</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of results">
+              <td>{{ item.approveStatus || 'Upload' }}</td>
+              <td>{{ item.templateName }}</td>
+              <td>{{ item.fileName }}</td>
+              <td>{{ item.uploader }}</td>
+              <td>{{ item.uploadTime }}</td>
+              <td>{{ item.counter }}</td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary me-2" (click)="exportData(item.fileName)">Export</button>
+                <button class="btn btn-sm btn-outline-secondary me-2" (click)="getDetails(item.fileName)">Details</button>
+                <button *ngIf="item.approveStatus !== 'Upload'" class="btn btn-sm btn-outline-success me-2" (click)="approve(item.fileName, true)">Approve</button>
+                <button *ngIf="item.approveStatus !== 'Upload'" class="btn btn-sm btn-outline-danger" (click)="approve(item.fileName, false)">Reject</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
