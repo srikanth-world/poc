@@ -1,67 +1,62 @@
-<link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+import { Component } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent {
+  isLoading: boolean = false; // Loading flag
+  results: any[] = []; // Data from API
+
+  constructor(private http: HttpClient) {}
+
+  onSearch() {
+    this.isLoading = true; // Show spinner
+
+    // Example API call
+    this.http.get<any[]>('https://api.example.com/data').subscribe(
+      (data) => {
+        this.results = data; // Assign data to results
+        this.isLoading = false; // Hide spinner
+      },
+      (error) => {
+        console.error('Error fetching data:', error);
+        this.isLoading = false; // Hide spinner even if there's an error
+      }
+    );
+  }
+}
+
+
+
+
+-----------
+
+
+
 
 <div class="container mt-4">
   <div class="row justify-content-center">
     <div class="col-md-12">
       <form (ngSubmit)="onSearch()" class="mb-4">
-        <div class="row g-3">
-          <div class="col-md-3">
-            <label for="uploadFrom" class="form-label">Upload From</label>
-            <input type="date" class="form-control" [(ngModel)]="criteria.uploadFrom" name="uploadFrom" id="uploadFrom">
-          </div>
-          <div class="col-md-3">
-            <label for="uploadTo" class="form-label">Upload To</label>
-            <input type="date" class="form-control" [(ngModel)]="criteria.uploadTo" name="uploadTo" id="uploadTo">
-          </div>
-          <div class="col-md-3">
-            <label for="templateName" class="form-label">Template Name</label>
-            <select class="form-select" [(ngModel)]="criteria.templateName" name="templateName" id="templateName">
-              <option *ngFor="let item of dropdownList" [value]="item.value">{{ item.text }}</option>
-            </select>
-          </div>
-          <div class="col-md-3">
-            <label for="approveStatus" class="form-label">Approve Status</label>
-            <select class="form-select" [(ngModel)]="criteria.approveStatus" name="approveStatus" id="approveStatus">
-              <option *ngFor="let status of approveStatus" [value]="status.value">{{ status.text }}</option>
-            </select>
-          </div>
-        </div>
-        <div class="row mt-3">
-          <div class="col-md-12">
-            <button type="submit" class="btn btn-primary">Search</button>
-          </div>
-        </div>
+        <!-- Your form fields here -->
+        <button type="submit" class="btn btn-primary">Search</button>
       </form>
 
-      <div *ngIf="results" class="table-responsive">
+      <!-- Loading Spinner -->
+      <div *ngIf="isLoading" class="text-center">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading data...</p>
+      </div>
+
+      <!-- Results Table -->
+      <div *ngIf="results && !isLoading" class="table-responsive">
         <table class="table table-striped table-hover">
-          <thead class="table-dark">
-            <tr>
-              <th>Approve Status</th>
-              <th>Template Name</th>
-              <th>File Name</th>
-              <th>Uploader</th>
-              <th>Upload Time</th>
-              <th>Recorded Count</th>
-              <th>Operation</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of results">
-              <td>{{ item.approveStatus || 'Upload' }}</td>
-              <td>{{ item.templateName }}</td>
-              <td>{{ item.fileName }}</td>
-              <td>{{ item.uploader }}</td>
-              <td>{{ item.uploadTime }}</td>
-              <td>{{ item.counter }}</td>
-              <td>
-                <button class="btn btn-sm btn-outline-primary me-2" (click)="exportData(item.fileName)">Export</button>
-                <button class="btn btn-sm btn-outline-secondary me-2" (click)="getDetails(item.fileName)">Details</button>
-                <button *ngIf="item.approveStatus !== 'Upload'" class="btn btn-sm btn-outline-success me-2" (click)="approve(item.fileName, true)">Approve</button>
-                <button *ngIf="item.approveStatus !== 'Upload'" class="btn btn-sm btn-outline-danger" (click)="approve(item.fileName, false)">Reject</button>
-              </td>
-            </tr>
-          </tbody>
+          <!-- Table content here -->
         </table>
       </div>
     </div>
