@@ -1,7 +1,33 @@
-Key Features:
-✅ Static Code Analysis: Scans source code for security flaws without executing it.
-✅ Identifies Common Vulnerabilities: Detects OWASP Top 10 risks like XSS, SQL Injection, CSRF, and more.
-✅ Developer-Friendly Fixes: Provides actionable remediation guidance.
-✅ Integrates with CI/CD Pipelines: Works with DevOps workflows to ensure secure coding practices.
-✅ Supports Multiple Languages: Works with C#, Java, JavaScript, Python, and many others.
+Title: Fixing Reflected XSS in C# – Checkmarx Code Scan
 
+What is Checkmarx?Checkmarx is a Static Application Security Testing (SAST) tool that helps developers identify and fix security vulnerabilities in their source code during the development phase.
+
+Key Features:✅ Static Code Analysis: Scans source code for security flaws without executing it.✅ Identifies Common Vulnerabilities: Detects OWASP Top 10 risks like XSS, SQL Injection, CSRF, and more.✅ Developer-Friendly Fixes: Provides actionable remediation guidance.✅ Integrates with CI/CD Pipelines: Works with DevOps workflows to ensure secure coding practices.✅ Supports Multiple Languages: Works with C#, Java, JavaScript, Python, and many others.
+
+By using Checkmarx, organizations can shift security left, detecting vulnerabilities early and reducing the risk of breaches. 🔒🚀
+
+Checkmarx Identified Issue: Reflected XSS
+
+Reflected Cross-Site Scripting (XSS) occurs when an application takes user input and reflects it back in the response without proper validation or encoding.
+
+Attackers can inject malicious JavaScript into a URL, which executes in the user's browser when they click the link.
+
+Example of Vulnerable Code:
+
+string userInput = Request.QueryString["input"];
+Response.Write(userInput); // Vulnerable to XSS
+
+📌 Risk: If an attacker crafts a URL like https://example.com/page?input=<script>alert('XSS')</script>, the script will execute in the victim’s browser.
+
+Fix using HttpUtility.HtmlEncode()
+
+string userInput = Request.QueryString["input"];
+Response.Write(HttpUtility.HtmlEncode(userInput)); // Encodes HTML special characters
+
+✅ Fix Explanation:
+
+HttpUtility.HtmlEncode() sanitizes the user input by encoding special HTML characters (< > " &) into their safe equivalents (&lt; &gt; &quot; &amp;).
+
+This prevents the browser from interpreting the input as executable script, blocking the XSS attack.
+
+🔹 Checkmarx Scan Result: Issue resolved after applying this fix.
